@@ -1,51 +1,48 @@
-from flask import Flask, request
-
-# Сложение: http://127.0.0.1:5000/add?a=1&b=1
-# Вычитание: http://127.0.0.1:5000/sub?a=1&b=1
-# Умножение: http://127.0.0.1:5000/mult?a=1&b=1
-# Деление: http://127.0.0.1:5000/div?a=1&b=1
+from flask import Flask, request, render_template
+import pandas as pd
 
 app = Flask(__name__)
 
-@app.route("/add")
-def addition():
-	try:
-		a = float(request.args.get('a'))
-		b = float(request.args.get('b'))
-		c = a + b
-		return f"{a} + {b} = {c}"
-	except Exception as e:
-		return f"Произошла ошибка: {e}"
+shops = {'magnit': 'Магнит', 'rigla': 'Ригла', 'aptekaru': 'Аптека Ру'}
+categories = {'dermacosmetika': 'Дермакосметика', 'dlapishevoreniya': 'Для пищеварения', 'vitaminiibad': 'Витамины и БАД'}
 
-@app.route("/sub")
-def subtruction():
-	try:
-		a = float(request.args.get('a'))
-		b = float(request.args.get('b'))
-		c = a - b
-		return f"{a} - {b} = {c}"
-	except Exception as e:
-		return f"Произошла ошибка: {e}"
+def read_data():
+	items = pd.read_csv('data.csv', skiprows=1)
+	items.columns = ['shop', 'category', 'name', 'price', 'old_price', 'link', 'image']
 
-@app.route("/mult")
-def multiplication():
-	try:
-		a = float(request.args.get('a'))
-		b = float(request.args.get('b'))
-		c = a * b
-		return f"{a} * {b} = {c}"
-	except Exception as e:
-		return f"Произошла ошибка: {e}"
+	return items
 
-@app.route("/div")
-def division():
-	try:
-		a = float(request.args.get('a'))
-		b = float(request.args.get('b'))
-		c = a / b
-		return f"{a} / {b} = {c}"
-	except Exception as e:
-		return f"Произошла ошибка: {e}"
+def get_price_range():
+	items = read_data()
+	min_price = int(items['price'].min())
+	max_price = int(items['price'].max())
+
+	return [min_price, max_price]
+
+@app.route("/", methods=['GET', 'POST'])
+def search_page():
+  form_data = request.form
+  price_range = get_price_range()
+  items = None
+
+  if len(form_data) > 0:
+    print(form_data)
+    items = read_data()
+
+    if form_data.get('shop') != 'all':
+      items = items[items['shop'] == shops[form_data.get('shop')]]
+    if form_data.get('category') != 'all':
+      items = items[items['category'] == categories[form_data.get('category')]]
+    if len(form_data.get('name')) > 0:
+      items = items[items['name'].str.contains(form_data.get('name'), case=False)]
+    if form_data.get('discount') == 'on':
+      items = items[items['price'] < items['old_price']]
+    items = items[items['price'] >= float(form_data.get('min_price'))]
+    items = items[items['price'] <= float(form_data.get('max_price'))]
+
+    items = list(items.values)
+
+  return render_template('index.html', items=items, price_range=price_range)
 
 if __name__ == '__main__':
 	app.run(debug=True)
