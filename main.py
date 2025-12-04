@@ -3,11 +3,12 @@ import pandas as pd
 
 app = Flask(__name__)
 
+data_path = "data/data.csv"
 shops = {'magnit': 'Магнит', 'rigla': 'Ригла', 'aptekaru': 'Аптека Ру'}
 categories = {'dermacosmetika': 'Дермакосметика', 'dlapishevoreniya': 'Для пищеварения', 'vitaminiibad': 'Витамины и БАД'}
 
 def read_data():
-	items = pd.read_csv('data.csv', skiprows=1)
+	items = pd.read_csv(data_path, skiprows=1)
 	items.columns = ['shop', 'category', 'name', 'price', 'old_price', 'link', 'image']
 
 	return items
