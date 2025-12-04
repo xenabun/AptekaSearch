@@ -3,39 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Поиск лекарств</title>
-		<style>
-			.title {
-				display: block;
-				width: auto;
-				text-align: center;
-			}
-			.search-form {
-				display: flex;
-				flex-direction: column;
-				align-items: flex-start;
-			}
-			table {
-				width: 100%;
-				border-collapse: collapse;
-			}
-			th, td {
-				border: 1px solid black;
-				padding: 8px;
-				text-align: left;
-			}
-			th {
-				background-color: #f2f2f2;
-				cursor: pointer;
-			}
-			.table-header-sort-dir {
-				font-weight: normal;
-				margin-left: 5px;
-			}
-			.search-result-footer {
-				background-color: #f2f2f2;
-				text-align: center;
-			}
-		</style>
+		<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 	</head>
 	<body>
 		<div>
@@ -135,11 +103,12 @@
 							dir = "asc";
 							while (switching) {
 								switching = false;
-								rows = table.rows;
-								for (i = 1; i < (rows.length - 1); i++) {
+								rows = table.querySelectorAll('tbody > tr');
+								// console.log(rows);
+								for (i = 0; i < rows.length - 1; i++) {
 									shouldSwitch = false;
-									x = rows[i].getElementsByTagName("TD")[n];
-									y = rows[i + 1].getElementsByTagName("TD")[n];
+									x = rows[i].getElementsByTagName("td")[n];
+									y = rows[i + 1].getElementsByTagName("td")[n];
 									if (dir == "asc") {
 										xspan = x.getElementsByTagName('span');
 										yspan = y.getElementsByTagName('span');
