@@ -8,6 +8,9 @@
 	</head>
 	<body>
 		<div>
+			{% if exception %}
+				<span>{{ exception }}</span>
+			{% endif %}
 			<span class="title">Поиск лекарств</span>
 			<form action="/" method="post" class="search-form">
 				<div>
@@ -57,26 +60,20 @@
 							<th onclick="sortTable(1)">Категория<span class="table-header-sort-dir"></span></th>
 							<th onclick="sortTable(2)">Наименование<span class="table-header-sort-dir"></span></th>
 							<th onclick="sortTable(3)">Цена<span class="table-header-sort-dir"></span ></th>
-							<!-- <th>Цена без скидки</th> -->
-							<!-- <th>Ссылка</th> -->
-							<!-- <th>Картинка</th> -->
 						</tr>
 					</thead>
 					<tbody>
 						{% for item in items %}
 							<tr>
-								<td>{{ item[0] }}</td>
-								<td>{{ item[1] }}</td>
-								<td><a href="{{ item[5] }}" target="_blank" rel="noopener noreferrer">{{ item[2] }}</a></td>
-								{% if item[3] == item[4] %}
-									<td><span>{{ item[3] }}</span></td>
+								<td>{{ item['Магазин'] }}</td>
+								<td>{{ item['Категория'] }}</td>
+								<td><a href="{{ item[Ссылка] }}" target="_blank" rel="noopener noreferrer">{{ item['Название'] }}</a></td>
+								{% if item['Цена'] == item['Цена без скидки'] %}
+									<td><span>{{ item['Цена'] }}</span></td>
 								{% else %}
-									<td><span>{{ item[3] }}</span> <s><small>{{ item[4] }}</small></s></td>
+									<td><span>{{ item['Цена'] }}</span> <s><small>{{ item['Цена без скидки'] }}</small></s></td>
 								{% endif %}
 							</tr>
-							<!-- <td>{{ item[4] }}</td> -->
-							<!-- <td>{{ item[5] }}</td> -->
-							<!-- <td>{{ item[6] }}</td> -->
 						{% endfor %}
 					</tbody>
 					{% if items_amount > items_show_limit %}
