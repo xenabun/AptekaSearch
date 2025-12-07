@@ -56,14 +56,19 @@
 				{% endif %}
 			</form>
 			{% if items %}
-				<table id="search-result">
+				<script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
+				<table id="search-result" class="sortable">
 					<caption>Результат поиска</caption>
 					<thead>
 						<tr>
-							<th onclick="sortTable(0)">Магазин<span class="table-header-sort-dir"></span></th>
+							<!-- <th onclick="sortTable(0)">Магазин<span class="table-header-sort-dir"></span></th>
 							<th onclick="sortTable(1)">Категория<span class="table-header-sort-dir"></span></th>
 							<th onclick="sortTable(2)">Наименование<span class="table-header-sort-dir"></span></th>
-							<th onclick="sortTable(3)">Цена<span class="table-header-sort-dir"></span ></th>
+							<th onclick="sortTable(3)">Цена<span class="table-header-sort-dir"></span ></th> -->
+							<th>Магазин<span class="table-header-sort-dir"></span></th>
+							<th>Категория<span class="table-header-sort-dir"></span></th>
+							<th>Наименование<span class="table-header-sort-dir"></span></th>
+							<th>Цена<span class="table-header-sort-dir"></span ></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -80,10 +85,18 @@
 							</tr>
 						{% endfor %}
 					</tbody>
-					{% if items_amount > items_show_limit %}
+					{% if page < max_page %}
 						<tfoot>
 							<tr>
-								<td class="search-result-footer" colspan="4">Еще {{ items_amount - items_show_limit }} товаров...</td>
+								<td class="search-result-footer" colspan="4">
+									<button>&lt;&lt;</button>
+									<button>&lt;</button>
+									{% for p in shown_pages %}
+										<button>{{ p }}</button>
+									{% endfor %}
+									<button>&gt;</button>
+									<button>&gt;&gt;</button>
+								</td>
 							</tr>
 						</tfoot>
 					{% endif %}

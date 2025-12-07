@@ -14,9 +14,11 @@ def search_page():
 	form_data = request.form
 	price_range = [0, 0]
 	items = None
-	items_amount = 0
-	items_show_limit = 100
+	items_show_limit = 10
 	page = 1
+	min_page = 1
+	max_page = 1
+
 	exception = None
 
 	try:
@@ -42,19 +44,24 @@ def search_page():
 				queries.append(f'name={form_data.get('name')}')
 			if form_data.get('discount') == 'on':
 				queries.append(f'discount=true')
-			queries.append(f'min_price={form_data.get('min_price')}')
-			queries.append(f'max_price={form_data.get('max_price')}')
+			queries.append(f'min_price={form_data.get('min_priceValue')}')
+			queries.append(f'max_price={form_data.get('max_priceValue')}')
+			queries.append(f'l={items_show_limit}')
 			queries.append(f'page={page}')
 
 			response = requests.get(request_url + '&'.join(queries))
-			items = response.json()
-			items_amount = len(items)
+			data = response.json()
+
+			items = data['items']
+			max_page = data['max_pages']
 		except Exception as e:
 			exception = str(e)
 
 	return render_template('index.html',
 						exception=exception,
 						items=items,
-						items_amount=items_amount,
-						items_show_limit=items_show_limit,
-						price_range=price_range)
+						price_range=price_range,
+						page=page,
+						min_page=min_page,
+						max_page=max_page,
+						shown_pages=[p for p in range(page - 1, page + 2) if p >= min_page and p <= max_page])
