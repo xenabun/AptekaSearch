@@ -1,14 +1,12 @@
 from flask import Flask, request, redirect, url_for, render_template
 from flask_wtf import CSRFProtect, FlaskForm
 from wtforms import StringField, SelectField, FloatField, BooleanField, HiddenField, SubmitField
-import pandas as pd
 import requests
 
 app = Flask(__name__)
 app.secret_key = 'aboba'
 csrf = CSRFProtect(app)
 
-data_path = "data/data.csv"
 shops = {'magnit': 'Магнит', 'rigla': 'Ригла', 'aptekaru': 'Аптека Ру'}
 categories = {'dermacosmetika': 'Дермакосметика', 'dlapishevoreniya': 'Для пищеварения', 'vitaminiibad': 'Витамины и БАД'}
 api_url = "https://maude-wardless-reba.ngrok-free.dev/api/"
