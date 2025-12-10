@@ -1,51 +1,103 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, redirect, url_for, render_template
+from flask_wtf import CSRFProtect, FlaskForm
+from wtforms import StringField, SelectField, FloatField, BooleanField, HiddenField, SubmitField
 import pandas as pd
 import requests
 
 app = Flask(__name__)
+app.secret_key = 'aboba'
+csrf = CSRFProtect(app)
 
 data_path = "data/data.csv"
 shops = {'magnit': 'Магнит', 'rigla': 'Ригла', 'aptekaru': 'Аптека Ру'}
 categories = {'dermacosmetika': 'Дермакосметика', 'dlapishevoreniya': 'Для пищеварения', 'vitaminiibad': 'Витамины и БАД'}
 api_url = "https://maude-wardless-reba.ngrok-free.dev/api/"
 
-@app.route("/", methods=['GET', 'POST'])
+class SearchForm(FlaskForm):
+	page = HiddenField('Страница', default=1)
+	min_page = HiddenField('Первая Страница', default=1)
+	max_page = HiddenField('Последняя Страница', default=1)
+	min_price_const = HiddenField('Минимальная цена', default=0)
+	max_price_const = HiddenField('Максимальная цена', default=0)
+
+	shop = SelectField('Магазин', choices=[
+		('all', 'Все'),
+		('magnit', 'Магнит'),
+		('rigla', 'Ригла'),
+		('aptekaru', 'Аптека Ру')
+	])
+	category = SelectField('Категория', choices=[
+		('all', 'Все'),
+		('dermacosmetika', 'Дермакосметика'),
+		('dlapishevoreniya', 'Для пищеварения'),
+		('vitaminiibad', 'Витамины и БАД')
+	])
+	min_price = FloatField('Минимальная цена')
+	max_price = FloatField('Максимальная цена')
+	discount = BooleanField('Со скидкой')
+	name = StringField('Поиск')
+	mysubmit = SubmitField('Найти')
+
+@app.route('/')
+def index():
+	return redirect(url_for('search_page'))
+
+@app.route("/search_page", methods=['GET', 'POST'])
 def search_page():
-	form_data = request.form
 	price_range = [0, 0]
 	items = None
 	items_show_limit = 10
 	page = 1
 	min_page = 1
 	max_page = 1
-
 	exception = None
+
+	form = SearchForm()
 
 	try:
 		request_url = api_url + 'price_range'
 		response = requests.get(request_url)
 		data = response.json()
 		price_range = [data['min_price'], data['max_price']]
+		
+		form.min_price.data = data['min_price']
+		form.min_price_const.data = data['min_price']
+		form.max_price.data = data['max_price']
+		form.max_price_const.data = data['max_price']
 	except Exception as e:
 		exception = str(e)
 
-	if len(form_data) > 0:
-		print(form_data)
+	if request.method == "POST":
+		if request.form.get('page'):
+			page = int(request.form.get('page'))
+			form.page.data = int(request.form.get('page'))
+		if request.form.get('shop'):
+			form.shop.data = request.form.get('shop')
+		if request.form.get('category'):
+			form.category.data = request.form.get('category')
+		if request.form.get('min_price'):
+			form.min_price.data = float(request.form.get('min_price'))
+		if request.form.get('max_price'):
+			form.max_price.data = float(request.form.get('max_price'))
+		if request.form.get('discount'):
+			form.discount.data = True
+		if request.form.get('name'):
+			form.name.data = request.form.get('name')
 
 		try:
 			request_url = api_url + 'data?'
 			queries = []
 
-			if form_data.get('shop') != 'all':
-				queries.append(f'shop={shops[form_data.get('shop')]}')
-			if form_data.get('category') != 'all':
-				queries.append(f'category={categories[form_data.get('category')]}')
-			if len(form_data.get('name')) > 0:
-				queries.append(f'name={form_data.get('name')}')
-			if form_data.get('discount') == 'on':
+			if form.shop.data != 'all':
+				queries.append(f'shop={shops[form.shop.data]}')
+			if form.category.data != 'all':
+				queries.append(f'category={categories[form.category.data]}')
+			if len(form.name.data) > 0:
+				queries.append(f'name={form.name.data}')
+			if form.discount.data == True:
 				queries.append(f'discount=true')
-			queries.append(f'min_price={form_data.get('min_priceValue')}')
-			queries.append(f'max_price={form_data.get('max_priceValue')}')
+			queries.append(f'min_price={form.min_price.data}')
+			queries.append(f'max_price={form.max_price.data}')
 			queries.append(f'l={items_show_limit}')
 			queries.append(f'page={page}')
 
@@ -54,12 +106,16 @@ def search_page():
 
 			items = data['items']
 			max_page = data['max_pages']
+
+			form.max_page.data = max_page
 		except Exception as e:
 			exception = str(e)
 
 	return render_template('index.html',
+						form=form,
 						exception=exception,
 						items=items,
+						items_show_limit=items_show_limit,
 						price_range=price_range,
 						page=page,
 						min_page=min_page,

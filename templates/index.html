@@ -7,73 +7,40 @@
 		<script type="text/javascript" src="{{ url_for('static', filename='script.js') }}"></script>
 	</head>
 	<body>
+		{% from "macros/field.html" import render_text_field %}
 		<div>
 			{% if exception %}
 				<span>{{ exception }}</span>
 			{% endif %}
 			<span class="title">Поиск лекарств</span>
-			<form action="/" method="post" class="search-form">
+			<form action="/search_page" method="post" id="search-form" class="search-form">
+				{{ form.hidden_tag() }}
+				{{ render_text_field(form.shop) }}
+				{{ render_text_field(form.category) }}
+				{{ render_text_field(form.min_price) }}
+				{{ render_text_field(form.max_price) }}
+				{{ render_text_field(form.discount) }}
+				{{ render_text_field(form.name) }}
 				<div>
-					<label for="shop">Магазин</label>
-					<select id="shop" name="shop">
-						<option value="all" selected>Все</option>
-						<option value="magnit">Магнит</option>
-						<option value="rigla">Ригла</option>
-						<option value="aptekaru">Аптека Ру</option>
-					</select>
+					{{ form.mysubmit(class_="button button--form") }}
 				</div>
-				<div>
-					<label for="category">Категория</label>
-					<select id="category" name="category">
-						<option value="all" selected>Все</option>
-						<option value="dermacosmetika">Дермакосметика</option>
-						<option value="dlapishevoreniya">Для пищеварения</option>
-						<option value="vitaminiibad">Витамины и БАД</option>
-					</select>
-				</div>
-				{% if price_range %}
-					<div>
-						<label for="min_price">Минимальная цена</label>
-						<input type="range" id="min_price" name="min_price" min="{{ price_range[0] }}" max="{{ price_range[1] }}" value="{{ price_range[0] }}">
-						<input type="text" id="min_priceValue" name="min_priceValue" value="{{ price_range[0] }}" placeholder="Минимальная цена">
-					</div>
-					<div>
-						<label for="max_price">Максимальная цена</label>
-						<input type="range" id="max_price" name="max_price" min="{{ price_range[0] }}" max="{{ price_range[1] }}" value="{{ price_range[1] }}">
-						<input type="text" id="max_priceValue" name="max_priceValue" value="{{ price_range[1] }}" placeholder="Максимальная цена">
-					</div>
-				{% endif %}
-				<div>
-					<label for="discount">Со скидкой</label>
-					<input type="checkbox" id="discount" name="discount" />
-				</div>
-				{% if price_range %}
-					<div>
-						<label for="search">Поиск</label>
-						<input type="search" id="search" name="name" placeholder="Введите запрос">
-						<button type="submit">Найти</button>
-					</div>
-				{% endif %}
 			</form>
 			{% if items %}
-				<script src="https://www.kryogenix.org/code/browser/sorttable/sorttable.js"></script>
 				<table id="search-result" class="sortable">
 					<caption>Результат поиска</caption>
 					<thead>
 						<tr>
-							<!-- <th onclick="sortTable(0)">Магазин<span class="table-header-sort-dir"></span></th>
-							<th onclick="sortTable(1)">Категория<span class="table-header-sort-dir"></span></th>
-							<th onclick="sortTable(2)">Наименование<span class="table-header-sort-dir"></span></th>
-							<th onclick="sortTable(3)">Цена<span class="table-header-sort-dir"></span ></th> -->
-							<th>Магазин<span class="table-header-sort-dir"></span></th>
-							<th>Категория<span class="table-header-sort-dir"></span></th>
-							<th>Наименование<span class="table-header-sort-dir"></span></th>
-							<th>Цена<span class="table-header-sort-dir"></span ></th>
+							<th onclick="sortTable(0)">#<span class="table-header-sort-dir"></span></th>
+							<th onclick="sortTable(1)">Магазин<span class="table-header-sort-dir"></span></th>
+							<th onclick="sortTable(2)">Категория<span class="table-header-sort-dir"></span></th>
+							<th onclick="sortTable(3)">Наименование<span class="table-header-sort-dir"></span></th>
+							<th onclick="sortTable(4)">Цена<span class="table-header-sort-dir"></span ></th>
 						</tr>
 					</thead>
 					<tbody>
 						{% for item in items %}
 							<tr>
+								<td><span>{{ (page - 1) * items_show_limit + loop.index }}</span></td>
 								<td>{{ item['Магазин'] }}</td>
 								<td>{{ item['Категория'] }}</td>
 								<td><a href="{{ item[Ссылка] }}" target="_blank" rel="noopener noreferrer">{{ item['Название'] }}</a></td>
@@ -85,17 +52,45 @@
 							</tr>
 						{% endfor %}
 					</tbody>
-					{% if page < max_page %}
+					{% if min_page < max_page %}
 						<tfoot>
 							<tr>
-								<td class="search-result-footer" colspan="4">
-									<button>&lt;&lt;</button>
-									<button>&lt;</button>
+								<td class="search-result-footer" colspan="5">
+									{% if page > min_page %}
+										<a class="button" href="javascript:{}" onclick="
+											search_form = document.getElementById('search-form');
+											search_form.page.value = +search_form.min_page.value;
+											search_form.submit();
+										">&lt;&lt;</a>
+										<a class="button" href="javascript:{}" onclick="
+											search_form = document.getElementById('search-form');
+											search_form.page.value = +search_form.page.value - 1;
+											search_form.submit();
+										">&lt;</a>
+									{% endif %}
 									{% for p in shown_pages %}
-										<button>{{ p }}</button>
+										{% if page == p %}
+											<a class="button-disabled"><b>{{ p }}</b></a>
+										{% else %}
+											<a class="button" href="javascript:{}" onclick="
+												search_form = document.getElementById('search-form');
+												search_form.page.value = +`{{ p }}`;
+												search_form.submit();
+											">{{ p }}</a>
+										{% endif %}									
 									{% endfor %}
-									<button>&gt;</button>
-									<button>&gt;&gt;</button>
+									{% if page < max_page %}
+										<a class="button" href="javascript:{}" onclick="
+											search_form = document.getElementById('search-form');
+											search_form.page.value = +search_form.page.value + 1;
+											search_form.submit();
+										">&gt;</a>
+										<a class="button" href="javascript:{}" onclick="
+											search_form = document.getElementById('search-form');
+											search_form.page.value = +search_form.max_page.value;
+											search_form.submit();
+										">&gt;&gt;</a>
+									{% endif %}
 								</td>
 							</tr>
 						</tfoot>
