@@ -54,7 +54,7 @@
 								{% endif %}
 								<td>{{ item['Магазин'] }}</td>
 								<td>{{ item['Категория'] }}</td>
-								<td><a href="{{ item[Ссылка] }}" target="_blank" rel="noopener noreferrer">{{ item['Название'] }}</a></td>
+								<td><a href="{{ item['Ссылка'] }}" target="_blank" rel="noopener noreferrer">{{ item['Название'] }}</a></td>
 								{% if item['Цена'] == item['Цена без скидки'] %}
 									<td><span>{{ item['Цена'] }}</span></td>
 								{% else %}
